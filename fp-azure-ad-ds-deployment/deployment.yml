@@ -1,0 +1,14 @@
+AZURE_ADMIN_LOGIN_NAME: dlo.bagari@corkbizdev.onmicrosoft.com
+DOMAIN_NAME: corkbizdev.onmicrosoft.com
+LOCATION: westeurope
+DOMAIN_SERVICES_VNET_NAME: domain-services-vnet
+DOMAIN_SERVICES_VNET_ADDRESS_PREFIX: 10.0.0.0/16
+DOMAIN_SERVICES_SUBNET_NAME: domain-services-subnet
+DOMAIN_SERVICES_SUBNET_ADDRESS_PREFIX: 10.0.0.0/24
+NGINX_PUBLIC_IP_ADDRESS: 137.74.220.218
+LOGGER_JSON_FORMAT: false
+RESOURCE_GROUP: forcepoint-smc-integration
+DEPLOYMENT_TEMPLATE: /root/fp-ad-ds-deployment/azure_smc_template.json
+PFX_CERTIFICATE_EXPIRY_DAYS: 365
+PFX_CERTIFICATE_PASSWORD: Forcepoint1
+PFX_CERTIFICATE_BASE64: ""

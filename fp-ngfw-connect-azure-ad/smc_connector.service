@@ -1,0 +1,10 @@
+[Unit]
+Description=Forcepoint SMC connector service
+
+[Service]
+Restart=always
+RestartSec=3
+ExecStart=/var/azure_smc/smc-connector run --config /var/azure_smc/connector.yml
+
+[Install]
+WantedBy=multi-user.target

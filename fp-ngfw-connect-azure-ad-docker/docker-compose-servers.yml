@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  connector-smc:
+    container_name: smc-connector
+    hostname: smc-connector
+    image: docker.frcpnt.com/fp-scim-connector-smc:latest
+    restart: always
+    environment:
+      - LDAP_DOMAIN=${AZURE_DOMAIN_NAME}
+      - SMC.KEY=${SMC_API_KEY}
+      - SMC.IP_ADDRESS=${SMC_IP_ADDRESS}
+      - CONNECTOR.HOSTNAME=smc-connector
+      - APP_NAME=${AZURE_APP_NAME}
+      - AZURE_ADMIN_LOGIN_NAME=${AZURE_ADMIN_LOGIN_NAME}
+      - AZURE_ADMIN_LOGIN_PASSWORD=${AZURE_ADMIN_LOGIN_PASSWORD}
+
+  scim-service:
+    container_name: scim-service
+    hostname: scim-service
+    image: docker.frcpnt.com/fp-azure-scim-service:latest
+    environment:
+      - CONNECTOR.HOSTNAME=smc-connector
+      - SCIM.HOSTNAME=scim-service
+    restart: always
+    depends_on:
+      - connector-smc
+
+  nginx-reverse:
+    container_name: nginx-reverse
+    hostname: nginx-reverse
+    image: docker.frcpnt.com/fp-nginx-scim-smc:latest
+    ports:
+      - 80:80
+      - 443:443
+      - 8081:8081
+    environment:
+      - ENV=production
+      - SMC_PORTAL=${SMC_PORTAL}
+    volumes:
+      - ./certs/:/etc/nginx/certs/
+    restart: always
+    depends_on:
+      - scim-service

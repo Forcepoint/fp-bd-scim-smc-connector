@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  deployment:
+    container_name: deployment
+    hostname: deployment
+    image: docker.frcpnt.com/fp-deployment-azure-smc:latest
+    stdin_open: true
+    environment:
+      - APP_NAME=${AZURE_APP_NAME}
+      - SMC.KEY=${SMC_API_KEY}
+      - SMC.IP_ADDRESS=${SMC_IP_ADDRESS}
+      - NGINX_PUBLIC_IP_ADDRESS=${DOCKER_HOST_PUBLIC_IP_ADDRESS}
+      - AZURE_ADMIN_LOGIN_NAME=${AZURE_ADMIN_LOGIN_NAME}
+      - DOMAIN_NAME=${AZURE_DOMAIN_NAME}
+      - LOCATION=${AZURE_LOCATION}
+      - RESOURCE_GROUP=${AZURE_RESOURCE_GROUP_NAME}
+      - PFX_CERTIFICATE_EXPIRY_DAYS=${PFX_CERTIFICATE_EXPIRY_DAYS}
+      - PFX_CERTIFICATE_PASSWORD=${PFX_CERTIFICATE_PASSWORD}
+      - PFX_CERTIFICATE_BASE64=${PFX_CERTIFICATE_BASE64}
+      - DOMAIN_SERVICES_VNET_NAME=domain-services-vnet
+      - DOMAIN_SERVICES_VNET_ADDRESS_PREFIX=10.0.0.0/16
+      - DOMAIN_SERVICES_SUBNET_NAME=domain-services-subnet
+      - DOMAIN_SERVICES_SUBNET_ADDRESS_PREFIX=10.0.0.0/24
+      - LOGGER_JSON_FORMAT=false
+      - DEPLOYMENT_TEMPLATE=/app/azure_smc_template.json
+      - SCIM_TEMPLATE=/app/scim_template.json

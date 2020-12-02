@@ -1,0 +1,36 @@
+SMC:
+  IP_ADDRESS: 192.168.122.10
+  PORT: 8082
+  API_VERSION: 6.7
+  NAME: smc
+  KEY: zAje9HrhjEgkQq8pMywlKiD2
+CONNECTOR:
+  HOSTNAME: localhost
+  PORT: 8085
+LOG_FORMAT_JSON: false
+LDAP_DOMAIN: corkbizdev.onmicrosoft.com
+ROLES_UPDATE_TIME_IN_MINUTES: 10
+# one or multiple Permissions is required to be assigned to a new created user.
+# the permissions are: Logs Viewer, Reports Manager,  Owner, Viewer, Operator, Monitor, Editor, NSX Role, Superuser
+# if you want to set restricted permissions select one or more permissions from:  Logs_Viewer, Reports_Manager,  Owner, Viewer, Operator, Monitor, Editor, NSX_Role
+# for Unrestricted Permissions select Superuser only
+# the roles with true value will be selected as default roles.
+ROLES:
+  PERMISSIONS:
+    VIEWER: true
+    LOGS_VIEWER: false
+    REPORTS_MANAGER: false
+    OWNER: false
+    OPERATOR: false
+    MONITOR: false
+    EDITOR: false
+    NSX_ROLE: false
+    SUPPERUSER: false
+  # can log in to SMC API
+  CAN_USE_API: true
+  # allow sudo on engines
+  ALLOW_SUDO: false
+  # user can sudo via SSH/console. this only can be true if the selected permission is Superuser
+  CONSOLE_SUPPER_USER: false
+  # user can log in to the shared domain
+  ALLOW_TO_LOGS_IN_SHARED: true

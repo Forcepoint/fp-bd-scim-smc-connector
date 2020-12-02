@@ -1,0 +1,9 @@
+ISSUER: ForcePoint
+SCIM:
+  HOSTNAME: localhost
+  PORT: 8080
+CONNECTOR:
+  NAME: smc
+  HOSTNAME: localhost
+  PORT: 8085
+LOGGER_JSON_FORMAT: false

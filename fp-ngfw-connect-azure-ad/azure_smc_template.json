@@ -1,0 +1,235 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "domainName": {
+      "type": "String",
+      "metadata": {
+        "description": "Domain Name"
+      }
+    },
+    "location": {
+      "defaultValue": "[resourceGroup().location]",
+      "type": "String",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "domainServicesVnetName": {
+      "defaultValue": "domain-services-vnet",
+      "type": "String",
+      "metadata": {
+        "description": "Virtual Network Name"
+      }
+    },
+    "domainServicesVnetAddressPrefix": {
+      "defaultValue": "10.0.0.0/16",
+      "type": "String",
+      "metadata": {
+        "description": "Address Prefix"
+      }
+    },
+    "domainServicesSubnetName": {
+      "defaultValue": "domain-services-subnet",
+      "type": "String",
+      "metadata": {
+        "description": "Virtual Network Name"
+      }
+    },
+    "domainServicesSubnetAddressPrefix": {
+      "defaultValue": "10.0.0.0/24",
+      "type": "String",
+      "metadata": {
+        "description": "Subnet prefix"
+      }
+    },
+    "smcIpAddress": {
+      "defaultValue": "10.0.0.0/24",
+      "type": "String",
+      "metadata": {
+        "description": "Forcepoint SMC Public Ip Address"
+      }
+    },
+    "pfxBase64": {
+      "defaultValue": "",
+      "type": "String",
+      "metadata": {
+        "description": "Base64 string of PFX certificate"
+      }
+    },
+    "pfxPassword": {
+      "defaultValue": "",
+      "type": "String",
+      "metadata": {
+        "description": "password for PFX certificate"
+      }
+    }
+  },
+  "variables": {
+    "domainServicesNSGName": "[concat(parameters('domainServicesSubnetName'), '-nsg')]",
+    "nsgRefId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('domainServicesNSGName'))]",
+    "vnetRefId": "[resourceId('Microsoft.Network/virtualNetworks/', parameters('domainServicesVnetName'))]",
+    "subnetRefId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('domainServicesVnetName'), parameters('domainServicesSubnetName'))]",
+    "LdapAccess": [
+      "[parameters('smcIpAddress')]"
+    ],
+    "PfxCertificate":  "[parameters('pfxBase64')]",
+    "PfxCertificatePassword": "[parameters('pfxPassword')]"
+
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2018-10-01",
+      "name": "[variables('domainServicesNSGName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowPSRemotingSliceP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 301,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowRD",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "CorpNetSaw",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 201,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          },
+          {
+            "name": "AllowSyncWithAzureAD",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowPSRemotingSliceT",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "5986",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 302,
+              "direction": "Inbound"
+            }
+          },
+          {
+            "name": "AllowLDAPS",
+            "properties": {
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "636",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 401,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": "[variables('LdapAccess')]",
+              "destinationAddressPrefixes": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2018-10-01",
+      "name": "[parameters('domainServicesVnetName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('domainServicesNSGName')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('domainServicesVnetAddressPrefix')]"
+          ]
+        },
+        "dhcpOptions": {
+          "dnsServers": [
+            "10.0.0.4",
+            "10.0.0.5"
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "subnets",
+          "apiVersion": "2018-10-01",
+          "name": "[parameters('domainServicesSubnetName')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[parameters('domainServicesVnetName')]"
+          ],
+          "properties": {
+            "addressPrefix": "[parameters('domainServicesSubnetAddressPrefix')]",
+            "networkSecurityGroup": {
+              "id": "[variables('nsgRefId')]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.AAD/DomainServices",
+      "apiVersion": "2017-06-01",
+      "name": "[parameters('domainName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[parameters('domainServicesVnetName')]"
+      ],
+      "properties": {
+        "domainName": "[parameters('domainName')]",
+        "vnetSiteID": "[variables('vnetRefId')]",
+        "subnetId": "[variables('subnetRefId')]",
+        "ldapsSettings": {
+          "ldaps": "Enabled",
+          "pfxCertificate": "[variables('PfxCertificate')]",
+          "pfxCertificatePassword": "[variables('PfxCertificatePassword')]",
+          "externalAccess": "Enabled"
+        },
+        "domainSecuritySettings": {
+          "ntlmV1": "Enabled",
+          "tlsV1": "Enabled",
+          "syncNtlmPasswords": "Enabled"
+        },
+        "filteredSync": "Disabled",
+        "notificationSettings": {
+          "notifyGlobalAdmins": "Enabled",
+          "notifyDcAdmins": "Enabled",
+          "additionalRecipients": []
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
